@@ -1,0 +1,190 @@
+Assignment 3: Stocks
+	In this assignment, I have chosen to do my analysis on two stocks in the cellphone industry: Motorola and Apple. These two companies are big players in this field and both have had groundbreaking work in the industry. This report will discuss what happens in the concept of pairs trading and look into the simulation of a model. The idea of pairs trading focuses on strategically buying and selling stocks that are correlated. We use the ratio of these two stocks to decide which to sell and which to buy. The term ‘opening a position’ describes  when stock 1 is doing better relative to stock 2, and we buy stock 2 and sell stock 1. Closing a position is the opposite in that when the ratio returns to its average we buy stock 1 and sell stock 2. 
+ For my stocks, I designed Apple as stock 1 and Motorola as stock 2. First we load the data downloaded from the yahoo finance site. The two data sets have different starting dates. Motorola starts in January of 1990 while Apple starts in September of 1990. We have to make sure these dates have the same number of dates. To do so, we invert the data so its listed from oldest to newest. Then, we pick the earliest date in the Apple excel sheet which turns out to be 9/7/1990 and run a match function to see which row that is. 
+Now that these two data sets start in the same position, we can start using them. First we try to see if there is any correlation between the data sets. The correlation is about .271 which is tells us there is a slight correlation between the closing prices of the two stocks.  Next we go on to find the ratio of the stocks and try to see what the mean and standard deviation is of the stocks. 
+It’s interesting to see that the standard deviation of 14.4 is greater than the mean of 8.6 for the data. This might be due to the large fluctuations caused by events such as the release of the iPhone. Next we try to create a function which will output all the values when the ratio crosses the parameters set by ratio <= mu+k*sd & ratio >= mu - k*sd. These are the critical points we are interested in. We run a function to find these outputs:
+> outs
+ [1] 3649 4092 4105 4200 4209 5214 5218 5220 5222 5229 5232 5236 5242 5399 5407 5595 5662 5682 5744
+[20] 5751 5754 5756 5761 5827
+
+Now we can create a plot to visualize these points and figure out the opening and closing positions. 
+Looking at the graph, we can see that the ratio is steading increasing. This corresponds to the rise of apple overall in the phone industry and the sudden rise up translates to the value of the apple stock skyrocketing as iPhone is released and smartphone changes the cellphone industry.
+These outpoints represent the points which satisfy the parameters set and we use these to calculate the profit by deciding when to buy and sell. We run a buy function tells us the money we spend on buying at the positions. Next we calculate the money made by selling by creating a selling function and these values represent the profit we make by selling at the points calculated from outs. Finally we create a profit function and use that to find the optimal k-value which was k=.25.
+Conditions under which pairs trading worked well can be when the data sets have a strong correlation. This way, disturbances by chance or such does not disrupt the ratio as much as it would to a smaller correlation. Another indication of good pairs trading is the relative health of the stock. The companies who have good stock tend to have stable and predictable lines on the graph with steady slopes and no dramatic rises and falls in the slope. 
+Possible reasons for when working with real life stocks can be choosing the right pair of stocks to work with. Even in the same industry, stocks are highly differentiated. There’s many influences in a stock and that many variables in play make it very hard to choose two stocks that are correlated. Another insight is that profits drive much of the stock values so when a company does poor in revenue, its stock value plumments but that doesn’t mean the company is worth that much less in proportion. There is too much face value in a stock through profit and that might distort the true value of the stock and make it harder for people to choose the right stocks to invest in. These type of normal human reactions can definitely translate to real life errors in stock trading. Overall, this project has made me appreciate the power of stats in everyday life as well as its potential to influence in many aspects of finance, business, and life.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#load data
+appledata=read.csv("C:/Users/raymond/Desktop/apple stock data.csv")
+motodata=read.csv("C:/Users/raymond/Desktop/motorola.csv")
+
+#format the dates
+appledates=as.Date(appledata$Date, format="%m/%d/%y")
+motodates=as.Date(motodata$Date, format="%m/%d/%y")
+
+#invert the datafram upside down so its listed from oldest to newest
+appledata1=appledata[order(nrow(appledata):1),]
+motodata1=motodata[order(nrow(motodata):1),]
+
+tail(motodata1)
+tail(appledata1)     
+
+> tail(appledata1)
+        Date   Open   High    Low  Close   Volume Adj.Close
+6 10/14/2013 489.83 497.58 489.35 496.04  9329200    496.04
+5 10/15/2013 497.51 502.00 495.52 498.68 11389600    498.68
+4 10/16/2013 500.79 502.53 499.23 501.11  8923000    501.11
+3 10/17/2013 499.98 504.78 499.68 504.50  9021400    504.50
+2 10/18/2013 505.99 509.26 505.71 508.89 10323300    508.89
+1 10/21/2013 511.77 524.30 511.52 521.36 14102700    521.36
+> tail(motodata1)
+        Date  Open  High   Low Close  Volume Adj.Close
+6 10/14/2013 60.26 61.13 59.95 61.03 1405400     61.03
+5 10/15/2013 60.71 61.00 60.46 60.49 1677900     60.49
+4 10/16/2013 60.73 61.00 60.43 60.71 2014900     60.71
+3 10/17/2013 60.40 60.97 60.25 60.92 1988900     60.92
+2 10/18/2013 60.99 61.09 60.65 60.81 2562300     60.81
+1 10/21/2013 60.88 61.20 60.82 61.18 1872300     61.18
+
+#pick the earliest point of the 2 dataframes and find the row     
+match("9/7/1990",appledata1$Date)
+match("9/7/1990",motodata1$Date)
+
+class(motodata1)
+nrow(motodata1) 
+
+> class(motodata1)
+[1] "data.frame"
+> nrow(motodata1)
+[1] 5827
+
+#create motodata1 so that it starts at same date as appledata1
+motodata1=motodata1[173:5999,]
+
+#check to make sure they have same dimensions
+head(appledata1)
+head(motodata1)
+
+length(appledata1$Date)
+length(motodata1$Date)   
+> head(appledata1)
+          Date Open  High   Low Close  Volume Adj.Close
+5827  9/7/1990 35.5 36.75 35.13 36.38 2098800      8.34
+5826 9/10/1990 37.0 37.00 35.75 35.75 2732400      8.19
+5825 9/11/1990 36.0 36.13 33.75 34.00 6370800      7.79
+5824 9/12/1990 34.5 34.50 33.50 34.00 3600800      7.79
+5823 9/13/1990 34.5 34.75 33.00 33.75 3492400      7.74
+5822 9/14/1990 33.5 34.25 33.25 34.00 4084400      7.79
+> head(motodata1)
+          Date  Open  High   Low Close  Volume Adj.Close
+5655 5/14/1991 37.95 38.03 36.94 37.08  959800      7.92
+5654 5/15/1991 36.79 37.15 36.20 36.71 1876900      7.84
+5653 5/16/1991 36.94 37.74 36.71 37.59 1061600      8.03
+5652 5/17/1991 37.45 37.95 37.23 37.95  994600      8.11
+5651 5/20/1991 37.88 38.25 37.74 38.18  771300      8.15
+5650 5/21/1991 38.18 38.69 38.10 38.25 2205000      8.17
+> 
+> length(appledata1$Date)
+[1] 5827
+> length(motodata1$Date)
+[1] 5827
+
+#ratio of the stocks
+ratio=appledata1$Close/motodata1$Close
+mu = mean(ratio)
+sd = sqrt(var(ratio))
+
+#graph of the ratio over days
+plot(ratio, type = "l")
+abline(h = mu)
+abline(h = mu + .3*sd, col = "blue")
+abline(h = mu - .3*sd, col = "blue")
+ 
+
+#find the critical points
+yourfunction = function(appledata1, motodata1, k){
+ratio=appledata1$Close/motodata1$Close
+mu = mean(ratio)
+sd = sqrt(var(ratio))
+tmp = which(ratio <= mu+k*sd & ratio >= mu - k*sd)
+temp = tmp - 1
+temp = temp[-1]
+outs = tmp[-which(temp == tmp)]
+}
+outs
+> outs
+ [1] 3649 4092 4105 4200 4209 5214 5218 5220 5222 5229 5232 5236 5242 5399 5407 5595 5662 5682 5744
+[20] 5751 5754 5756 5761 5827
+
+#critical points to buy and sell
+buy_open = sapply(1:length(outs), function(i){
+  a = outs[i]
+  buy[i] = 1/motodata1$Close[a]
+})
+buy_open
+> buy_open
+ [1] 0.10964912 0.07867821 0.08250825 0.09451796 0.09099181 0.02143623 0.02123142 0.02166847
+ [9] 0.02151000 0.02152853 0.02194908 0.02218279 0.02191060 0.02119093 0.01975114 0.01890717
+[17] 0.01649349 0.01575796 0.01798885 0.01746420 0.01723247 0.01693480 0.01684636 0.01634521
+
+sell_open = sapply(1:length(outs), function(i){
+  a = outs[i]
+  sell[i] = 1/appledata1$Close[a]
+})
+sell_open
+> sell_open
+ [1] 0.011237218 0.010892060 0.011399909 0.009622787 0.009089256 0.002936858 0.002936599
+ [8] 0.002990431 0.002969297 0.002958230 0.003016682 0.003060444 0.003019050 0.002132969
+[15] 0.001991556 0.001895088 0.002227320 0.002168539 0.002484225 0.002376426 0.002367705
+[22] 0.002340331 0.002316102 0.001918060
+
+#finding the profit
+tmp = which(ratio <= mu+.1*sd & ratio >= mu - .1*sd)
+temp = tmp + 1
+temp = c(0, temp)
+ins = tmp[-which(temp == tmp)]
+profits = sum(sapply(1:length(buy_open), function(i){
+  profits = -buy_open[i]*motodata1$Close[outs[i]] + buy_open[i]*motodata1$Close[ins[i]] + sell_open[i]*appledata1$Close[outs[i]] - sell_open[i]*appledata1$Close[ins[i]]
+
+}))
+profits
+> profits
+[1] 0.3843563
+
+#find the optimal k
+yourfunction(appledata1, motodata1, k = .1)
+diff_ks = sapply(1:50, function(i){
+  i = i/100
+  profits = yourfunction(appledata1, motodata1, k = i)
+})
+which(diff_ks == max(diff_ks))
+[1] 25 
+Optimal k is .25
+
+#plot with the circled critcal points
+plot(ratio, type = "l")
+abline(h = mu)
+abline(h = mu + .3*sd, col = "blue")
+abline(h = mu - .3*sd, col = "blue")
+points(y = ratio[outs], x = outs  )
+ 
