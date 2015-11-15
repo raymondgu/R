@@ -1,0 +1,157 @@
+The topic of this assignment deals with working on regular expressions as well as UNIX shell tools. We are given a set of emails from October and work with the compressed file in text format. We first extract and unzip these outside of R and then use readLines to look at them. 
+	Question 1 Part 1
+	For this question we need to find the email addresses of 10 people who post the most emails. 
+From = grep("^From: ([^ ]+) at ([^ ]+)" , myData, value= TRUE, ignore.case = TRUE)
+
+The output of From would output: 
+[1] "From: dwinsemius at comcast.net (David Winsemius)"       "From: sreckojoksimovic at gmail.com (srecko joksimovic)"
+[3] "From: djnordlund at frontier.com (Daniel Nordlund)"      "From: dwinsemius at comcast.net (David Winsemius)"      
+[5] "From: sreckojoksimovic at gmail.com (srecko joksimovic)" "From: xchen at dr.com (Xianwen Chen)"                   
+
+All the way to
+[1580] "From: Mike.Conklin at gfk.com (Conklin, Mike (GfK))"                                                                       
+[1581] "From: ruipbarradas at sapo.pt (Rui Barradas)"                                                                              
+[1582] "From: andreas.leha at med.uni-goettingen.de (Andreas Leha)"                                                                
+[1583] "From: entropy053 at gmail.com (Yasin Gocgun)"                                                                              
+[1584] "From: richardkwock at gmail.com (Richard Kwock)"                                                                           
+[1585] "From: szehnder at uni-bonn.de (Simon Zehnder)"                                                                             
+[1586] "From: smartpink111 at yahoo.com (arun)"                                                                                    
+[1587] "From: ruipbarradas at sapo.pt (Rui Barradas)"                                                                              
+[1588] "From: dwinsemius at comcast.net (David Winsemius)"                                                                         
+[1589] "From: dulcalma at bigpond.com (Duncan Mackay)"                                                                             
+[1590] "From: r-help-bounces at r-project.org [mailto:r-help-bounces at r-project.org] On"  
+
+Next we want replace the From:  and the parenthesis in the output so that we can better work with the emails. Also we will replace the at with @. 
+> FromSub = gsub("From","", From)
+> FromSub2 = gsub("\\(.*\\)", "", FromSub)
+> FromSub2 = gsub(" at ", "@", FromSub2)
+
+The output of FromSub2:
+[1] ": dwinsemius@comcast.net "     ": sreckojoksimovic@gmail.com " ": djnordlund@frontier.com "    ": dwinsemius@comcast.net "     ": sreckojoksimovic@gmail.com "
+[6] ": xchen@dr.com "  
+
+All the way to
+[1578] ": entropy053@gmail.com "                                                                                      
+[1579] ": gunter.berton@gene.com "                                                                                    
+[1580] ": Mike.Conklin@gfk.com "                                                                                      
+[1581] ": ruipbarradas@sapo.pt "                                                                                      
+[1582] ": andreas.leha@med.uni-goettingen.de "                                                                        
+[1583] ": entropy053@gmail.com "                                                                                      
+[1584] ": richardkwock@gmail.com "                                                                                    
+[1585] ": szehnder@uni-bonn.de "                                                                                      
+[1586] ": smartpink111@yahoo.com "                                                                                    
+[1587] ": ruipbarradas@sapo.pt "                                                                                      
+[1588] ": dwinsemius@comcast.net "                                                                                    
+[1589] ": dulcalma@bigpond.com "                                                                                      
+[1590] ": r-help-bounces@r-project.org [mailto:r-help-bounces@r-project.org] On"
+
+We use this to create a table using table(FromSub2) which displays a list of emails and their frequencies shown below.
+                                                                                                            
+                                                                                     : wobbegong85@gmail.com  
+                                                                                                            1 
+                                                                                              : xchen@dr.com  
+                                                                                                            3 
+                                                                                            : xie@yihui.name  
+                                                                                                            4 
+                                                                                 : Xochitl.Cormon@ifremer.fr  
+                                                                                                            3 
+                                                                                             : yelin@lbl.gov  
+                                                                                                            4 
+                                                                                        : yuhanusa@gmail.com  
+                                                                                                            3 
+                                                                                        : zeleehom@gmail.com  
+                                                                                                            1 
+                                                                                          : zemlys@gmail.com  
+                                                                                                            1 
+                                                                                         
+Next we do FromTable=sort(table(FromSub2)) which sorts the emails in order of least frequent to most frequent. Now we are getting close to finding the top 10. We just need to use the tail function:
+> tail(FromTable, 10)
+FromSub2
+        : pdalgd@gmail.com      : ruipbarradas@sapo.pt         : carl@witthoft.com         : wdunlap@tibco.com  : jdnewmil@dcn.davis.CA.us  
+                         22                          22                          23                          29                          32 
+: murdoch.duncan@gmail.com        : jim@bitwrit.com.au    : gunter.berton@gene.com    : dwinsemius@comcast.net    : smartpink111@yahoo.com  
+                         34                          35                          48                          57                         134 
+
+Question 1 Part 2
+This asks us to create a regular expression to find all lines that contain a US phone number in its various forms. Some different possibilities of these forms can be: 
+(123) 456-7890
+(123) 456 - 7890
+(123) 456 7890
+(123) 456.7890
+(123) 4567890
+(123)456-7890
+(123)456.7890
+(123)4567890
+123 4567890
+	
+
+A function to find these: 
+phone3 = grep("[ -][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]", myData, value = TRUE)
+
+which creates this output: 
+> head(phone3)
+[1] "(650) 467-7374"                                "Phone: (206) 667-2793"                         "(650) 467-7374"                               
+[4] "(650) 467-7374"                                "Department of Ecology\t\tVOICE:\t\t(360) 407-6815" "PO Box 47600\t\t\tFAX:\t\t(360) 407-7534"  
+
+> tail(phone3)
+[1] "PO Box 47600\t\t\tFAX:\t\t(360) 407-7534" "Phone:  (206) 667-5791"              "Fax:    (206) 667-1319"              "(650) 467-7374"                     
+[5] "> (650) 467-7374"                    ">> (650) 467-7374"   
+
+Now we want to remove the Fax numbers using gsub:
+phoneSub=gsub('.*?((f|fax).*?[0-9]{3}.*?[0-9]{3}.*?[0-9]{4}).*?', '', phone3, ignore.case=TRUE)
+
+head(phoneSub)
+[1] "(650) 467-7374"        "Phone: (206) 667-2793" "(650) 467-7374"        "(650) 467-7374"        ""                      ""        
+
+> tail(phoneSub)
+[1] ""                       "Phone:  (206) 667-5791" ""                       "(650) 467-7374"         "> (650) 467-7374"       ">> (650) 467-7374"
+
+To match these possibilities:
+False positives?
+Pattern?
+Question1 Part 3
+We move on to the next part which asks us to find all the URLs in the emails. However, we exclude those related to the mailing list or the R posting guide. 
+To find the URLs that we want: 
+url2 = grep("http", myData, ignore.case=TRUE, value=TRUE)
+
+> head(url2)
+[1] "> https://stat.ethz.ch/mailman/listinfo/r-help"                                          
+[2] "> PLEASE do read the posting guide http://www.R-project.org/posting-guide.html"          
+[3] "URL: <https://stat.ethz.ch/pipermail/r-help/attachments/20130930/b78fcef6/attachment.pl>"
+[4] "> > > https://stat.ethz.ch/mailman/listinfo/r-help"                                      
+[5] "> > http://www.R-project.org/posting-guide.html"                                         
+[6] "> > https://stat.ethz.ch/mailman/listinfo/r-help"
+
+> tail(url2)
+[1] "> https://stat.ethz.ch/mailman/listinfo/r-help"                                
+[2] "> PLEASE do read the posting guide http://www.R-project.org/posting-guide.html"
+[3] "> https://stat.ethz.ch/mailman/listinfo/r-help"                                
+[4] "> PLEASE do read the posting guide http://www.R-project.org/posting-guide.html"
+[5] "https://stat.ethz.ch/mailman/listinfo/r-help"                                  
+[6] "PLEASE do read the posting guide http://www.R-project.org/posting-guide.html"  
+
+Now we want to omit some of these that contain the two constraints stated in the assignment:
+omit = grep("mailman/listinfo", url2, ignore.case=TRUE, value=TRUE)
+omit2 = grep("/r-help", url2, ignore.case=TRUE, value=TRUE)
+
+head(omit)
+[1] "> https://stat.ethz.ch/mailman/listinfo/r-help"     "> > > https://stat.ethz.ch/mailman/listinfo/r-help" "> > https://stat.ethz.ch/mailman/listinfo/r-help"  
+[4] "https://stat.ethz.ch/mailman/listinfo/r-help"       "> https://stat.ethz.ch/mailman/listinfo/r-help"     "> https://stat.ethz.ch/mailman/listinfo/r-help"    
+
+head(omit2)
+[1] "> https://stat.ethz.ch/mailman/listinfo/r-help"                                          
+[2] "URL: <https://stat.ethz.ch/pipermail/r-help/attachments/20130930/b78fcef6/attachment.pl>"
+[3] "> > > https://stat.ethz.ch/mailman/listinfo/r-help"                                      
+[4] "> > https://stat.ethz.ch/mailman/listinfo/r-help"                                        
+[5] "URL: <https://stat.ethz.ch/pipermail/r-help/attachments/20130930/b3bfca7e/attachment.pl>"
+[6] "URL: <https://stat.ethz.ch/pipermail/r-help/attachments/20131001/a49e8c0b/attachment.pl>"
+
+tail(omit)
+[1] ">>> https://stat.ethz.ch/mailman/listinfo/r-help" "> https://stat.ethz.ch/mailman/listinfo/r-help"   "https://stat.ethz.ch/mailman/listinfo/r-help"    
+[4] "> https://stat.ethz.ch/mailman/listinfo/r-help"   "> https://stat.ethz.ch/mailman/listinfo/r-help"   "https://stat.ethz.ch/mailman/listinfo/r-help"    
+
+tail(omit2)
+[1] ">>> https://stat.ethz.ch/mailman/listinfo/r-help" "> https://stat.ethz.ch/mailman/listinfo/r-help"   "https://stat.ethz.ch/mailman/listinfo/r-help"    
+[4] "> https://stat.ethz.ch/mailman/listinfo/r-help"   "> https://stat.ethz.ch/mailman/listinfo/r-help"   "https://stat.ethz.ch/mailman/listinfo/r-help"    
+
+
