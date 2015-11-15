@@ -1,0 +1,550 @@
+Assignment 2 Housing Data
+This homework deals with data from the Bay Area and the housing market over the past few years(from 2003 to 2006). This is an interesting segment of the market to look at given the recent housing bubble crash and its impact on the economy.
+Question 1
+We first want to look at how many houses were sold in the brief time of the data. To do this, we use the function:
+ length(housing$county)=
+[1] 281506
+
+This gives the sum of the housing sales in each of the counties and the total which is 281,506. It seems like a normal amount of houses sold given that the bay area is a top choice for families due to jobs and opportunities available here. 
+Question 2
+Next we investigate the time period that the data covers. 
+period = housing$date[order(housing$date)]
+This function gives the order of the dates from earliest to latest. By using a head and tail function, I learned that the earliest date is 04/27/03 and the latest 06/04/06. Looking at the calendar I was able to find out that this translates to around 793 days.
+Question 3
+The next question gets a little trickier as we have to find the number of houses sold in each county. Fortunately, table(housing$county) does the job: 
+Alameda: 60410
+Contra Costa: 59381
+Marin: 10450
+Napa: 5066
+SF: 8137
+San Mateo: 22558
+Santa Clara: 70424
+Solano: 23404 
+Sonoma: 21676
+
+
+It makes sense that Napa county has the least number of homes sold because it is primarily taken over by wineries and vineyards. Large residential and suburban communities have the most number of homes sold and this can be seen in the new developments in Alameda and Santa Clara County which translates to a high volume of homes sold. 
+Question 4
+The next question asks how many houses were sold in each county each year. It is a lot more tricky and I had to go to office hours to figure this out. First we make table(housing$date) which creates a table of the housing vector and the date column subset. Then we create a variable called b= cut(housing$date, "year") which cuts the “year” part of the output and stores it in b. Next we run table(b)
+> table(b)
+b
+2003-01-01 2004-01-01 2005-01-01 2006-01-01 
+     60311     100593      91894      28708
+
+	It creates a table of the frequencies of each year from 2003 to 20006. Then we use tapply to create a for loop to see these yearly frequencies in each county
+tapply(b, housing$county, table)
+$`Alameda County`
+
+2003-01-01 2004-01-01 2005-01-01 2006-01-01 
+     12207      22168      19733       6302 
+
+$`Contra Costa County`
+
+2003-01-01 2004-01-01 2005-01-01 2006-01-01 
+     13212      20932      19256       5981 
+
+$`Marin County`
+
+2003-01-01 2004-01-01 2005-01-01 2006-01-01 
+      2431       3723       3207       1089 
+
+$`Napa County`
+
+2003-01-01 2004-01-01 2005-01-01 2006-01-01 
+      1183       1749       1599        535 
+
+$`San Francisco County`
+
+2003-01-01 2004-01-01 2005-01-01 2006-01-01 
+      1979       2825       2581        752 
+
+$`San Mateo County`
+
+2003-01-01 2004-01-01 2005-01-01 2006-01-01 
+      4831       7505       7707       2515 
+
+$`Santa Clara County`
+
+2003-01-01 2004-01-01 2005-01-01 2006-01-01 
+     13914      26315      23103       7092 
+
+$`Solano County`
+
+2003-01-01 2004-01-01 2005-01-01 2006-01-01 
+      5237       7832       7910       2425 
+
+$`Sonoma County`
+
+2003-01-01 2004-01-01 2005-01-01 2006-01-01 
+      5317       7544       6798       2017 
+
+This shows how many homes were sold in each county throughout 2003 to 2006. It is interesting to note that sales peaked in 2004 and began to taper off and then dramatically plummet in 2006. This directly translates to the housing bubble crash as tons of homes were foreclosed due to buyers defaulting on their loans.
+Question 5
+	We now look at the average price of a home in the bay area. It is relatively simple as we can just do summary(housing$price)
+> summary(housing$price)
+    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+   22000   400000   530000   602000   700000 20000000
+
+It shows that the mean price is 602,000 dollars. There are some crazy outliers pulling the mean up and there is a max of 20000000. The median is a better estimator of the middle price because it is not affected as much by outliers and shows a value of 530,000 dollars. 
+Question 6
+	The next question asks which county has the largest average price per square foot. We start by looking at the unique counties so we don’t have to deal with duplicates. 
+unicounty = unique(housing$county)
+
+This creates a variable that houses each of the nine counties. Next we run a for loop through sapply:
+test=sapply(unicounty, function(x){
+  co.in = housing$county %in% x
+  tm = housing[co.in, ]
+  a = mean(tm$price/tm$bsqft, na.rm = TRUE)
+})
+We run the unicounty variable and thus each of the nine counties through a loop and it creates an index which has each of the price and bsqft of the counties and outputs the average of it in a variable called a.
+> test
+[1] 375.2483 332.6470 502.3382 403.9856 605.2580 521.0924 424.6415 260.9629 344.2795
+> unicounty
+[1] Alameda County       Contra Costa County  Marin County         Napa County          San Francisco County San Mateo County     Santa Clara County  
+[8] Solano County        Sonoma County       
+Levels: Alameda County Contra Costa County Marin County Napa County San Francisco County San Mateo County Santa Clara County Solano County Sonoma County
+> names(test) = unicounty
+> which.max(test)
+San Francisco County 
+
+Next we run the test variable which spits out the averages prices per sq ft of the nine counties. How do we find out which average is which county? We do names(test)=unicounty to match them and then do which.max(test) to find the highest one which is SF. It makes sense because SF generally has the highest housing prices and is a major city. 
+Question 7:
+The next question asks what county has the largest variation in housing prices per bedroom. I approached this question in a similar vein of the previous question. The coding is very similar 
+unicounty = unique(housing$county)
+test=sapply(unicounty, function(x){
+     co.in = housing$county %in% x
+     temp = housing[co.in, ]
+     a = max(temp$price/temp$br)-min(temp$price/temp$br)
+})
+I just replaced the logical operations and variables inside the a variable to price and bedroom. The next few lines of code are also very similar. 
+unicounty
+names(test) = unicounty
+test
+which.max(test)
+It gives an output of Napa county as the highest variation of price per bedroom and it makes sense because Napa is different from most counties in that it is mostly vineyards and wineries. 
+Question 8:
+This question asks us average price per sq ft of houses b/t 2 and 4 bedrooms in Berkeley with 1000 to 3000 sq ft OR which have lot size > 90% of Bay Area houses. It is different from previous questions in that it deals with logical values. 
+First we create an index of Berkeley inside the city subset:
+in.be = housing$city == "Berkeley"
+Then we create a variable of the housing vector with the index:
+temp.be = housing[in.be, ]
+Next is the hard part as we must bring in the Boolean conditions and then create an index to find the mean. 
+bo = (temp.be$br >= 2 & temp.be$br <= 4) & (temp.be$bsqft >= 1000 & temp.be$bsqft <= 3000) | temp.be$lsqft > quantile(housing$lsqft, .90, na.rm =TRUE) 
+in.bo = bo == "TRUE"
+temp.bo = housing[in.bo, ]
+mean(temp.bo$price/temp.bo$bsqft, na.rm = TRUE)
+[1] 390.5074
+
+Question 9:
+This question asks us to find 5 houses with strange characteristics
+I wanted to find houses which were priced at exorbitant values. 
+ sum(housing$price > 10000000)
+It showed 5 houses with prices above this extremely high value which is very suspicious given that the median home price was only $500,000. 
+housing[housing$price > 10000000, ]
+                     county       city   zip                 street    price br  lsqft bsqft year       date      long      lat
+101951     San Mateo County PLEASANTON 94027    352 Atherton Avenue 10400000  5  64030  3740 1947 2004-04-11 -122.2185 37.43791
+129275   Santa Clara County PLEASANTON 94022    12775 Viscaino Road 12700000  6 102802  7240 2003 2004-07-04 -122.1395 37.37856
+161323          Napa County PLEASANTON 94574       1 Greenfield Way 20000000  3 152024  1879 1967 2004-09-26 -122.3885 38.51359
+320817         Marin County PLEASANTON 94903 1499 Lucas Valley Road 14725000  4 386812  6148 1997 2006-02-05 -122.5774 38.02881
+347385 San Francisco County PLEASANTON 94115    2863 Pacific Avenue 10875000  6   6895  7628 1911 2006-06-04 -122.4425 37.79236
+
+These 5 houses were usual in that there prices were all above 1 billion. There could be a mistake in the typing and there was an extra zero.
+Next I tried to look up my own house to see if there was anything strange. My house was purchased within the range of 2003 to 2006 and I looked at the data to search for my street name. 
+sum(housing$street == "4173 Holland Drive")
+housing[housing$street == "4173 Holland Drive", ]
+county       city   zip             street  price br lsqft bsqft year       date      long      lat                                   quality match
+230822 Alameda County PLEASANTON 94588 4173 Holland Drive 670000  1  6200  1489 1971 2005-05-01 -121.9122 37.67961 QUALITY_ZIP_CODE_TABULATION_AREA_CENTROID Exact
+               wk
+230822 2005-04-25
+
+Looking at the output, there was something off with the number of bedrooms. It said that my house only had 1 bedroom when in fact there were 4. 
+Question 10:
+The last question asks to find houses with $ per sq ft > $3000 and order data frame from highest to lowest. 
+sum(housing$price/housing$bsqft > 3000, na.rm = TRUE)
+The code above shows that there are 23 such houses above $3000.
+na.omit(housing[housing$price/housing$bsqft > 3000, ])
+temp1 = na.omit(housing[housing$price/housing$bsqft > 3000, ])
+This outputs the prices
+[1]  4588.235  3171.642 10216.346  3371.628  4669.565  3516.174  3020.548 10643.960  7603.687  4900.990  3195.000  3290.617  3046.875  3349.094  4110.169
+
+temp1$price/temp1$bsqft
+sort(temp1$price/temp1$bsqft)
+[1]  3020.548  3046.875  3171.642  3195.000  3290.617  3349.094  3371.628  3516.174  4110.169  4588.235  4669.565  4900.990  7603.687 10216.346 10643.960
+
+order(temp1)
+Question 1: Reproducing Plot
+We are asked to replicate a plot of the graph shown on the homework. To do this, we must use the table function to obtain the counties and weeks while using the lattice library. The overall plot is reproduced using the codes below. In terms of how it can be improved, I would focus on making the lines more distinctive and easier to differentiate from each other. Also it might be easier to use multiple plots because there seems to be so much going on in this single plot. I would code in R to create 9 plots for easier comparison and then 
+
+library(lattice)
+  
+table(housing$wk, housing$county)
+
+c=as.matrix(table(housing$wk, housing$county))
+
+matplot(c, type="l", xlim=c(0,150), ylim=c(0,600), ann = FALSE)
+legend("topleft",legend= c("Alameda County county","Contra Costa county", "Marin county", "Napa county", "SF county", "San Mateo county","Santa Clara county","Solano county","Sonoma county"),cex=0.25,)       
+title(xlab="weeks",ylab="Number of houses sold")
+title(main="Number of houses sold by week in each county")
+
+ 
+Question 2 Scatterplot
+Next we will look at t 
+
+in.al = housing$county == "Alameda County"
+housing[in.al, ]
+temp.al = housing[in.al, ]
+plot(temp.al$price, temp.al$bsqft, ylim=c(0,4500), xlim=c(0,4e+06))
+points(temp.al$bsqft)
+ 
+Question 3 Map
+> library("maps")
+> tempmap= tapply(housing$price, housing$county, mean)
+> maporder=tempmap[order(tempmap)]
+> maporder
+       Solano County        Sonoma County  Contra Costa County       Alameda County 
+            404392.8             521223.9             539682.5             555152.0 
+         Napa County   Santa Clara County     San Mateo County San Francisco County 
+            601556.4             652749.7             799927.9             819034.3 
+        Marin County 
+            898993.1 
+> testmap= map('county',xlim=c(-123.6,-121.5),ylim=c(36.98,38.85))
+> colprice=c("green", rep("red",3), rep("yellow",2),"blue", rep("purple",2))
+ Question 4 
+In order to compare distributions of housing prices by county we can use other types of plots to use different interpretations of the data. Another way to visualize it is through a box and whisker plot. The box and whisker plot can display the 9 counties in side by side comparison. Thus we can better compare the differences of the distributions.
+bwplot(housing$price~housing$county,ylab="price",xlab="county",main="price of houses sold in each county" )
+  
+
+I haven’t figured out a way to clean the x axis yet and it still looks very jumbled but we can see from the dot plot that there are a few very high outliers that full the mean of the counties.
+Critiquing Plots
+1.	This first plot can be improved by making the colors more differentiable rather than all just 50 shades of grey. I would suggest using colors that are very noticeable from each other such as red, green, blue, etc. Afterwards, there also needs to be a legend to list what the colors represent or the individual counties can be labeled on the x-axis. The y-axis also be labeled with the “houses sold” to let the reader what is being measured.
+2.	The 4 plots are confusing to read separately. It would be better if they were combined into one 3D plot or box and whisker plot. That way, the reader can better visualize the graphs as one entity rather as many separate ones. Also the y-axis goes too high due to outliers and this distorts the graph. This can be avoided if we use a box and whisker plot instead.
+Code
+
+Question 1
+> length(housing$county)
+[1] 281506
+
+#we have 281506 home sales
+Question 2
+period = housing$date[order(housing$date)]
+
+#order fuction sorts by smallest to biggest
+#earliest: 04/27/03 to latest: 06/04/06
+#793 days
+Question 3
+	#number of houses sold in each county
+> length(unique(housing$county))
+[1] 9
+
+	#there are 9 unique counties
+#find how many houses are sold in each of the 9 counties	
+	> table(housing$county)
+
+      Alameda County  Contra Costa County         Marin County          Napa County 
+               60410                59381                10450                 5066 
+San Francisco County     San Mateo County   Santa Clara County        Solano County 
+                8137                22558                70424                23404 
+       Sonoma County 
+               21676 
+
+Question 4
+table(housing$date)
+b = cut(housing$date, "year")
+table(b)
+tapply(b, housing$county, table)
+	> table(housing$date)
+
+2003-04-27 2003-05-04 2003-05-11 2003-05-18 2003-05-25 2003-06-01 2003-06-08 2003-06-15 
+      1513       1369       1609       1330       1527       1842       1516       1609 
+2003-06-22 2003-06-29 2003-07-06 2003-07-13 2003-07-20 2003-07-27 2003-08-03 2003-08-10 
+      1473       1700       1564       1312       1755       1581       1824       1769 
+2003-08-17 2003-08-24 2003-08-31 2003-09-07 2003-09-14 2003-09-21 2003-09-28 2003-10-05 
+      1455       1982       1608       1923       1582       1498       1792       1654 
+2003-10-12 2003-10-19 2003-10-26 2003-11-02 2003-11-09 2003-11-16 2003-11-23 2003-11-30 
+      1494       1739       1676       1830       1887       2066       1830       1750 
+2003-12-07 2003-12-14 2003-12-21 2003-12-28 2004-01-04 2004-01-11 2004-01-18 2004-01-25 
+      1722       1857       1864       1809       1717       1686       1814       1846 
+2004-02-01 2004-02-08 2004-02-15 2004-02-22 2004-02-29 2004-03-07 2004-03-14 2004-03-21 
+      1960       1848       1686       1189       1225       1022       1348       1440 
+2004-03-28 2004-04-04 2004-04-11 2004-04-18 2004-04-25 2004-05-02 2004-05-09 2004-05-16 
+      1440       1686       1659       1869       1746       1749       1603       1792 
+2004-05-23 2004-05-30 2004-06-06 2004-06-13 2004-06-20 2004-06-27 2004-07-04 2004-07-11 
+      1411       1423       1957       1987       1825       1954       1984       2028 
+2004-07-18 2004-07-25 2004-08-01 2004-08-08 2004-08-15 2004-08-22 2004-08-29 2004-09-05 
+      1940       2092       2113       2316       2095       2328       2309       2578 
+2004-09-12 2004-09-19 2004-09-26 2004-10-03 2004-10-10 2004-10-17 2004-10-24 2004-10-31 
+      2432       2417       2669       2398       2774       2362       2033       2388 
+2004-11-07 2004-11-14 2004-11-21 2004-11-28 2004-12-05 2004-12-12 2004-12-19 2004-12-26 
+      1968       2285       1951       1861       2051       2102       2212       2025 
+2005-01-02 2005-01-09 2005-01-16 2005-01-23 2005-01-30 2005-02-06 2005-02-13 2005-02-20 
+      2114       1769       1813       1975       1340       1615       1411       1266 
+2005-02-27 2005-03-06 2005-03-13 2005-03-20 2005-03-27 2005-04-03 2005-04-10 2005-04-17 
+      1126       1276       1293       1279       1448       1546       1418       1461 
+2005-04-24 2005-05-01 2005-05-08 2005-05-15 2005-05-22 2005-05-29 2005-06-05 2005-06-12 
+      1403       1925       1879       2170       1853       1896       1753       2073 
+2005-06-19 2005-06-26 2005-07-03 2005-07-10 2005-07-17 2005-07-24 2005-07-31 2005-08-07 
+      1888       2226       2185       1941       2233       2376       1963       2263 
+2005-08-14 2005-08-21 2005-08-28 2005-09-04 2005-09-11 2005-09-18 2005-09-25 2005-10-02 
+      2014       2223       1975       1960       1774       1753       1956       2011 
+2005-10-09 2005-10-16 2005-10-23 2005-10-30 2005-11-06 2005-11-13 2005-11-20 2005-11-27 
+      1620       1828       1785       1744       1995       1755       1749       1739 
+2005-12-04 2005-12-11 2005-12-18 2005-12-25 2006-01-01 2006-01-08 2006-01-15 2006-01-22 
+      1692       1527       1150       1467       1366       1328       1230       1085 
+2006-01-29 2006-02-05 2006-02-12 2006-02-19 2006-02-26 2006-03-05 2006-03-12 2006-03-19 
+      1274       1246       1030       1212       1046       1151       1074       1087 
+2006-03-26 2006-04-02 2006-04-09 2006-04-16 2006-04-23 2006-04-30 2006-05-07 2006-05-14 
+      1135       1129       1180       1276       1481       1427       1381       1242 
+2006-05-21 2006-05-28 2006-06-04 
+      1343       1629       1356 
+> b = cut(housing$date, "year")
+> table(b)
+b
+2003-01-01 2004-01-01 2005-01-01 2006-01-01 
+     60311     100593      91894      28708 
+> tapply(b, housing$county, table)
+$`Alameda County`
+
+2003-01-01 2004-01-01 2005-01-01 2006-01-01 
+     12207      22168      19733       6302 
+
+$`Contra Costa County`
+
+2003-01-01 2004-01-01 2005-01-01 2006-01-01 
+     13212      20932      19256       5981 
+
+$`Marin County`
+
+2003-01-01 2004-01-01 2005-01-01 2006-01-01 
+      2431       3723       3207       1089 
+
+$`Napa County`
+
+2003-01-01 2004-01-01 2005-01-01 2006-01-01 
+      1183       1749       1599        535 
+
+$`San Francisco County`
+
+2003-01-01 2004-01-01 2005-01-01 2006-01-01 
+      1979       2825       2581        752 
+
+$`San Mateo County`
+
+2003-01-01 2004-01-01 2005-01-01 2006-01-01 
+      4831       7505       7707       2515 
+
+$`Santa Clara County`
+
+2003-01-01 2004-01-01 2005-01-01 2006-01-01 
+     13914      26315      23103       7092 
+
+$`Solano County`
+
+2003-01-01 2004-01-01 2005-01-01 2006-01-01 
+      5237       7832       7910       2425 
+
+$`Sonoma County`
+
+2003-01-01 2004-01-01 2005-01-01 2006-01-01 
+      5317       7544       6798       2017 
+
+#gives table of each county and how many houses sold each year
+Question 5
+#avg price of a house in bay area?
+> summary(housing$price)
+    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+   22000   400000   530000   602000   700000 2000000
+
+#avg price is $602,000
+Question 6
+#Which county has the largest average price per square foot?
+unicounty = unique(housing$county)
+test=sapply(unicounty, function(x){
+  co.in = housing$county %in% x
+  tm = housing[co.in, ]
+  a = mean(tm$price/tm$bsqft, na.rm = TRUE)
+})
+
+test
+unicounty
+names(test) = unicounty
+which.max(test)
+}
+> test
+[1] 375.2483 332.6470 502.3382 403.9856 605.2580 521.0924 424.6415 260.9629 344.2795
+> unicounty
+[1] Alameda County       Contra Costa County  Marin County         Napa County         
+[5] San Francisco County San Mateo County     Santa Clara County   Solano County       
+[9] Sonoma County       
+9 Levels: Alameda County Contra Costa County Marin County Napa County ... Sonoma County
+> names(test) = unicounty
+> which.max(test)
+San Francisco County 
+                   5 
+
+Question 7
+#Which county has the largest variation in price per bedroom?
+unicounty = unique(housing$county)
+test=sapply(unicounty, function(x){
+     co.in = housing$county %in% x
+     temp = housing[co.in, ]
+     a = max(temp$price/temp$br)-min(temp$price/temp$br)
+})
+test
+which.max(test)
+unicounty
+names(test) = unicounty
+> test
+[1] 4105000 1483333 4726500 6616667 2766667 3224333 2097167 1484000 4235000
+> which.max(test)
+[1] 4
+> unicounty
+[1] Alameda County       Contra Costa County  Marin County         Napa County         
+[5] San Francisco County San Mateo County     Santa Clara County   Solano County       
+[9] Sonoma County       
+9 Levels: Alameda County Contra Costa County Marin County Napa County ... Sonoma County
+> names(test) = unicounty
+
+#Napa county has the most variation
+Question 8
+#avg price per sq ft of houses b/t 2 and 4 bedrooms in Berk w/ 1000 to 3000 sq ft OR which have lot size > 90% of Bay Area houses
+> temp.be = housing[in.be,]
+> bo = (temp.be$br >= 2 & temp.be$br <= 4) & (temp.be$bsqft >= 1000 & temp.be$bsqft <= 3000) | temp.be$lsqft > quantile(housing$lsqft, .90, na.rm =TRUE) 
+> in.bo = bo == "TRUE"
+> temp.bo = housing[in.bo, ]
+> mean(temp.bo$price/temp.bo$bsqft, na.rm = TRUE)
+[1] 390.5074
+
+Question 9
+#Find 5 houses which have very unusual characteristics/may be erroneous?
+
+> sum(housing$price > 10000000)
+[1] 5
+> housing[housing$price > 10000000, ]
+                     county            city   zip                 street    price br  lsqft
+101951     San Mateo County        Atherton 94027    352 Atherton Avenue 10400000  5  64030
+129275   Santa Clara County Los Altos Hills 94022    12775 Viscaino Road 12700000  6 102802
+161323          Napa County       St Helena 94574       1 Greenfield Way 20000000  3 152024
+320817         Marin County      San Rafael 94903 1499 Lucas Valley Road 14725000  4 386812
+347385 San Francisco County   San Francisco 94115    2863 Pacific Avenue 10875000  6   6895
+       bsqft year       date      long      lat                                   quality match
+101951  3740 1947 2004-04-11 -122.2185 37.43791 QUALITY_ZIP_CODE_TABULATION_AREA_CENTROID Exact
+129275  7240 2003 2004-07-04 -122.1395 37.37856       QUALITY_ADDRESS_RANGE_INTERPOLATION Exact
+161323  1879 1967 2004-09-26 -122.3885 38.51359       QUALITY_ADDRESS_RANGE_INTERPOLATION Exact
+320817  6148 1997 2006-02-05 -122.5774 38.02881       QUALITY_ADDRESS_RANGE_INTERPOLATION Exact
+347385  7628 1911 2006-06-04 -122.4425 37.79236 QUALITY_ZIP_CODE_TABULATION_AREA_CENTROID Exact
+               wk
+101951 2004-04-05
+129275 2004-06-28
+161323 2004-09-20
+320817 2006-01-29
+347385 2006-05-29
+
+> sum(housing$street == "4173 Holland Drive")
+[1] 1
+> housing[housing$street == "4173 Holland Drive", ]
+               county       city   zip             street  price br lsqft bsqft year       date
+230822 Alameda County Pleasanton 94588 4173 Holland Drive 670000  1  6200  1489 1971 2005-05-01
+            long      lat                                   quality match         wk
+230822 -121.9122 37.67961 QUALITY_ZIP_CODE_TABULATION_AREA_CENTROID Exact 2005-04-25
+
+Question 10
+sum(housing$price/housing$bsqft > 3000, na.rm = TRUE)
+na.omit(housing[housing$price/housing$bsqft > 3000, ])
+temp1 = na.omit(housing[housing$price/housing$bsqft > 3000, ])
+temp1$price/temp1$bsqft
+sort(temp1$price/temp1$bsqft)
+> sum(housing$price/housing$bsqft > 3000, na.rm = TRUE)
+[1] 23
+> na.omit(housing[housing$price/housing$bsqft > 3000, ])
+                   county         city   zip                    street    price br  lsqft bsqft
+3825       Alameda County      Oakland 94621          1490 82nd Avenue  3900000  3   5240   850
+14540  Santa Clara County     Saratoga 95070      20851 Michaels Drive  1700000  1  50530   536
+45070       Sonoma County   Santa Rosa 95407        2872 Dutton Meadow  8500000  2  21344   832
+92303      Alameda County      Oakland 94605 6477 Buena Ventura Avenue  6750000  4   6360  2002
+118987   San Mateo County    Daly City 94015         705 Skyline Drive  5370000  3   3300  1150
+122677      Sonoma County   Santa Rosa 95405     2511 Summerfield Road  2500000  2 182516   711
+133573   San Mateo County     Atherton 94027     139 Tuscaloosa Avenue  4410000  3  63200  1460
+161323        Napa County    St Helena 94574          1 Greenfield Way 20000000  3 152024  1879
+169395     Alameda County     Berkeley 94702        1115 Cowper Street  8250000  2   3000  1085
+187160 Santa Clara County    Palo Alto 94301          236 Seale Avenue  1980000  1   9583   404
+210570   San Mateo County     Millbrae 94030      841 Clearfield Drive   639000  1   7500   200
+258278        Napa County         Napa 94558       2230 Big Ranch Road  7575000  4 875992  2302
+261929 Santa Clara County  Morgan Hill 95037     530 East Dunne Avenue  3510000  3 190793  1152
+296806       Marin County  Mill Valley 94941       390 Edgewood Avenue  4250000  2  28800  1269
+333716   San Mateo County Redwood City 94062          15 Danfort Court  2425000  1  19644   590
+       year       date      long      lat                             quality            match
+3825   1990 2003-05-11 -122.1786 37.75563 QUALITY_ADDRESS_RANGE_INTERPOLATION          Relaxed
+14540  1935 2003-06-15 -122.0386 37.26194 QUALITY_ADDRESS_RANGE_INTERPOLATION            Exact
+45070  1952 2003-09-28 -122.7237 38.40496 QUALITY_ADDRESS_RANGE_INTERPOLATION            Exact
+92303  1954 2004-03-07 -122.1755 37.77635                                   1                1
+118987 1958 2004-06-06 -122.4904 37.67750 QUALITY_ADDRESS_RANGE_INTERPOLATION            Exact
+122677 1951 2004-06-13 -122.6616 38.44129 QUALITY_ADDRESS_RANGE_INTERPOLATION Relaxed; Soundex
+133573 1920 2004-07-18 -122.2088 37.45455 QUALITY_ADDRESS_RANGE_INTERPOLATION            Exact
+161323 1967 2004-09-26 -122.3885 38.51359 QUALITY_ADDRESS_RANGE_INTERPOLATION            Exact
+169395 1913 2004-10-17 -122.2917 37.86727 QUALITY_ADDRESS_RANGE_INTERPOLATION            Exact
+187160 1918 2004-11-28 -122.1447 37.43412                       gpsvisualizer            Exact
+210570 2003 2005-02-06 -122.4097 37.59581 QUALITY_ADDRESS_RANGE_INTERPOLATION            Exact
+258278 1928 2005-07-17 -122.2934 38.33462       QUALITY_EXACT_PARCEL_CENTROID Relaxed; Soundex
+261929 1969 2005-07-24 -121.6406 37.12902       QUALITY_EXACT_PARCEL_CENTROID Relaxed; Soundex
+296806 1904 2005-11-06 -122.5595 37.90324 QUALITY_ADDRESS_RANGE_INTERPOLATION            Exact
+333716 1965 2006-04-09 -122.2610 37.46954                       gpsvisualizer            Exact
+               wk
+3825   2003-05-05
+14540  2003-06-09
+45070  2003-09-22
+92303  2004-02-29
+118987 2004-05-31
+122677 2004-06-07
+133573 2004-07-12
+161323 2004-09-20
+169395 2004-10-11
+187160 2004-11-21
+210570 2005-01-30
+258278 2005-07-11
+261929 2005-07-18
+296806 2005-10-30
+333716 2006-04-03
+> temp1 = na.omit(housing[housing$price/housing$bsqft > 3000, ])
+> temp1$price/temp1$bsqft
+ [1]  4588.235  3171.642 10216.346  3371.628  4669.565  3516.174  3020.548 10643.960  7603.687
+[10]  4900.990  3195.000  3290.617  3046.875  3349.094  4110.169
+> sort(temp1$price/temp1$bsqft)
+ [1]  3020.548  3046.875  3171.642  3195.000  3290.617  3349.094  3371.628  3516.174  4110.169
+[10]  4588.235  4669.565  4900.990  7603.687 10216.346 10643.960
+
+#1 Reproduce Plot
+The overall plot is reproduced using the codes below. In terms of how it can be improved, I would focus on making the lines more distinctive and easier to differentiate from each other. Also it might be easier to use multiple plots because there seems to be so much going on in this single plot. I would code in R to create 9 plots for easier comparison and then 
+library(lattice)
+table(housing$wk, housing$county)
+c=as.matrix(table(housing$wk, housing$county))
+matplot(c, type="l", xlim=c(0,150), ylim=c(0,600), ann = FALSE)
+legend("topleft",legend= c("Alameda County county","Contra Costa county", "Marin county", "Napa county", "SF county", "San Mateo county","Santa Clara county","Solano county","Sonoma county"),cex=0.25,)       
+title(xlab="weeks",ylab="Number of houses sold")
+title(main="Number of houses sold by week in each county")
+
+ 
+
+Question 2 Scatterplot
+in.al = housing$county == "Alameda County"
+housing[in.al, ]
+temp.al = housing[in.al, ]
+plot(temp.al$price, temp.al$bsqft, ylim=c(0,4500), xlim=c(0,4e+06))
+points(temp.al$bsqft)
+ 
+Question 3 Map
+> library("maps")
+> tempmap= tapply(housing$price, housing$county, mean)
+> maporder=tempmap[order(tempmap)]
+> maporder
+       Solano County        Sonoma County  Contra Costa County       Alameda County 
+            404392.8             521223.9             539682.5             555152.0 
+         Napa County   Santa Clara County     San Mateo County San Francisco County 
+            601556.4             652749.7             799927.9             819034.3 
+        Marin County 
+            898993.1 
+> testmap= map('county',xlim=c(-123.6,-121.5),ylim=c(36.98,38.85))
+> colprice=c("green", rep("red",3), rep("yellow",2),"blue", rep("purple",2))
+ 
+Question 4 Ways to effectively display and compare the distributions of house prices by county
+bwplot(housing$price~housing$county,ylab="price",xlab="county",main="price of houses sold in each county" )
+  
