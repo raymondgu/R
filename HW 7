@@ -1,0 +1,135 @@
+For this assignment, we are exploring the concept of bootstrapping with simple linear regression. We have two different devices, A and B, for measuring a response Y. The linear model is: Y = Beta0 + Beta1 * X = X * Beta + epsilon. A problem with two different devices is that they have different accuracies. Thus, the epsilon distribution depends on the device used. There also has to be consideration on the errors that have double exponential distributions, which is each device with its own separate parameter. Density for the epsilon is: Theta * e^(-|x|*theta) and is the distribution of errors and is analogous to the normal bell shape. Theta1 is for Device A while Theta2 is for Device B.
+	Our data frame contains variables X, Y, and device(A or B). We don’t know the parameters of the double exponential distributions so we fit the model for each group separately and get initial estimates for the parameters. Then we use these in the weights to fit the model for all observations. 
+	The first method to bootstrap is to sample the X, Y pairs either randomly or in proportion to the number of observations for each device and then perform the estimation procedure. For the first part, we sample with replacement and then compute weights based on whether its Device A or B. We use these weights because A and B have different accuracies and so we weight them according to how accurate they are. These weights can be determined by taking the residuals for each device, then computing the variance on these residuals, and then dividing 1 by that. We will be taking the original devices data frame, then fitting a linear model for each of the devices. Then find the weights of each device using the residuals of those two linear models, and use those weights to fit another linear model.
+We start by loading the data from the website:
+load(url("http://eeyore.ucdavis.edu/stat141/Data/linearModelData.rda"))
+Afterwards, we check the columns of the data and see that there are 3 columns: y x and device. We must separate the A and B in order to find the weight. 
+> head(devices)
+          y        x device
+1  80.49146 10.09751      A
+2  78.87990 10.48403      A
+3  94.86287 12.66101      A
+4  78.24183 10.26772      A
+5  95.24807 13.07905      A
+6 112.59180 14.80746      A
+
+We fit the linear model by subsetting the rows under device column that only have A. 
+> lm1 = lm(y~x, data = subset(devices, device == "A"))
+> lm1
+
+Call:
+lm(formula = y ~ x, data = subset(devices, device == "A"))
+
+Coefficients:
+(Intercept)            x  
+      2.508        7.390  
+
+Next we find the residual of the linear model and find the weight: 
+resid1 = resid(lm1)
+> weightA= 1/sd(resid1)^2
+> weightA
+[1] 0.02983384
+
+We repeat the same procedure to find the weight for B:
+> lm2 = lm(y~x, data = subset(devices, device == "B"))
+> lm2
+
+Call:
+lm(formula = y ~ x, data = subset(devices, device == "B"))
+
+Coefficients:
+(Intercept)            x  
+      3.351        7.330  
+> resid2 = resid(lm2)
+> weightB= 1/sd(resid2)^2
+> weightB
+[1] 0.005112289
+
+Next we will combine the weights of A and B and find the coefficients:
+> lm1
+
+Call:
+lm(formula = y ~ x, data = subset(devices, device == "A"))
+
+Coefficients:
+(Intercept)            x  
+      2.508        7.390  
+
+> var.a = sd(residuals(lm1))^2
+> 
+> lm2
+
+Call:
+lm(formula = y ~ x, data = subset(devices, device == "B"))
+
+Coefficients:
+(Intercept)            x  
+      3.351        7.330  
+
+> var.b = sd(residuals(lm2))^2
+> 
+> Wght = function( var.1, var.2 , n1 , n2 ){
++   W = rep( c(var.1 , var.2) , c(n1 , n2))
++   W2 = W/ sum(W)
++   
++   return(W2)
++ }
+> weights.norm = Wght(var.a , var.b , 4000 , 6000)
+> 
+> mod1 = lm(devices$y ~ devices$x , weights = weights.norm)
+> 
+> coef(mod1)
+(Intercept)   devices$x 
+   3.261186    7.335991 
+
+Our B0 value is 3.261 186 and our B1 value is 7.335991. Next we will be trying to run a bootstrap 
+> boot1 = lapply(1:1000, function(x){
++   test
++   lm1 = lm(y~x, data = subset(devices, device == "A"))
++   
++   resid1 = resid(lm1)
++   
++   weightA= 1/sd(resid1)^2
++   
++   lm2 = lm(y~x, data = subset(devices, device == "B"))
++   
++   resid2 = resid(lm2)
++   
++   weightB= 1/sd(resid2)^2
++   
++   var.a = sd(residuals(lm1))^2
++   
++   var.b = sd(residuals(lm2))^2
++   
++   Wght = function( var.1, var.2 , n1 , n2 ){
++     W = rep( c(var.1 , var.2) , c(n1 , n2))
++     W2 = W/ sum(W)
++     
++     return(W2)
++   }
++   
++   weights.norm = Wght(var.a , var.b , 4000 , 6000)
++   
++   mod1 = lm(devices$y ~ devices$x , weights = weights.norm)
++   
++   coef(mod1)
++ })
+> BootData1 = data.frame(do.call(rbind, boot1))
+> names(BootData1) = c("B0", "B1")
+> mean(BootData1$B0)
+[1] 3.261186
+> mean(BootData1$B1)
+[1] 7.335991
+> var(BootData1$B0, BootData1$B1)
+[1] 0
+
+The outputs for the Beta0 and Beta1 for the samples are very similar to the ones calculated above (3.261 186 and 7.335991) within a small degree. 
+Next we will be producing plots for these:
+> plot(density(BootData1$B0), main = "B0 Density")
+> plot(density(BootData1$B1), main = "B1 Density")
+
+ 
+ 
+For the second part, we will be performing the initial estimation of the double-exponential parameters through separate models for each device and then fit the model for all the data together. We will be using residuals to find Y* from the x beta hat plus epsilon. It is a non-parametric resampling. 
+For the third part we will be estimating the two double-exponential parameters and then bootstrapping by generating epsilon from these distributions. It is a parametric bootstrap. 
+
