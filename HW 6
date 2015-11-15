@@ -1,0 +1,198 @@
+We start with installing the package and setting up the library for using the database. The following functions are used: install.packages("RSQLite")and library(RSQLite). After we have done this, we can look at the many aspects of baseball through the 24 tables inside this database. 
+	To begin, we establish a driver to this connection: drv = dbDriver("SQLite"). After this is done, we connect to the location of the sqlite file by con = dbConnect(drv, "C:/Users/raymond/Desktop/baseball-archive-2011.sqlite"). Now we can continue working with the data. 
+	We open the tables inside the database and see what is inside:
+> dbListTables(con)
+[1] "AllstarFull"         "Appearances"         "AwardsManagers"      "AwardsPlayers"       "AwardsShareManagers" "AwardsSharePlayers"  "Batting"
+[8] "BattingPost"         "Fielding"            "FieldingOF"          "FieldingPost"        "HallOfFame"          "Managers"            "ManagersHalf"
+[15] "Master"              "Pitching"            "PitchingPost"        "Salaries"            "Schools"             "SchoolsPlayers"      "SeriesPost"
+[22] "Teams"               "TeamsFranchises"     "TeamsHalf"
+
+There are 24 tables we can work with and some of the interesting ones seem to be the Master, Teams, and the batting statistics and such. In order to list the columns values inside a table such as Teams, we do: 
+> dbListFields(con, "Teams")
+ [1] "yearID"         "lgID"           "teamID"         "franchID"       "divID"          "Rank"           "G"              "Ghome"          "W"             
+[10] "L"              "DivWin"         "WCWin"          "LgWin"          "WSWin"          "R"              "AB"             "H"              "2B"            
+[19] "3B"             "HR"             "BB"             "SO"             "SB"             "CS"             "HBP"            "SF"             "RA"            
+[28] "ER"             "ERA"            "CG"             "SHO"            "SV"             "IPouts"         "HA"             "HRA"            "BBA"           
+[37] "SOA"            "E"              "DP"             "FP"             "name"           "park"           "attendance"     "BPF"            "PPF"           
+[46] "teamIDBR"       "teamIDlahman45" "teamIDretro"   
+
+Now we can see inside the columns of a given table and can begin working deeper inside the database. For the QUESTION 1, we are asked to look at the years covered and data in each year. Based on the lowest and highest years we can conclude that the data ranges from 1871 to 2011. There is also data in each of these years that we can use and play with.
+> years = dbGetQuery(con, "SELECT yearID FROM Teams")
+
+> head(years)
+  yearID
+1   1871
+2   1871
+3   1871
+4   1871
+5   1871
+6   1871
+> max(years)
+[1] 2011
+
+	QUESTION 2 focuses on the number of unique people such players, managers, etc. To find the total number of people in the baseball database, we look at the distinct playerID and managerID and add them up in a variable called distinctpeople and then we call up the variable to see the number. 
+> distinctpeople = dbGetQuery(con, "SELECT COUNT(DISTINCT playerID) + COUNT(DISTINCT managerID) FROM Master;")
+
+> distinctpeople
+  COUNT(DISTINCT playerID) + COUNT(DISTINCT managerID)
+1                                                18410
+
+ Next we are finding the total number of players and managers. To see these values we do: 
+> players = dbGetQuery(con, "SELECT COUNT(DISTINCT playerID) from Master")
+> players
+  COUNT(DISTINCT playerID)
+1                    17736
+
+> managers = dbGetQuery(con, "SELECT COUNT(DISTINCT managerID) from Master")
+> managers
+  COUNT(DISTINCT managerID)
+1                       674
+
+QUESTION 3 wants to find the team that won the World Series in year 2000. We can do this by: 
+> worldwon = dbGetQuery(con, "SELECT teamID FROM Teams WHERE WSWin ='Y'AND yearID = 2000 ")
+> worldwon
+  teamID
+1    NYA
+
+QUESTION 4 asks us to find which team lost the World Series each year. 
+> WSLOSER = (dbGetQuery(con, "SELECT name, yearID FROM Teams WHERE LgWIN = 'Y' AND WSWin = 'N' AND yearID > 1902;"))
+
+> WSLOSER
+                      name yearID
+1       Pittsburgh Pirates   1903
+2   Philadelphia Athletics   1905
+3             Chicago Cubs   1906
+4           Detroit Tigers   1907
+5           Detroit Tigers   1908
+6           Detroit Tigers   1909
+7             Chicago Cubs   1910
+8          New York Giants   1911
+9          New York Giants   1912
+10         New York Giants   1913
+11  Philadelphia Athletics   1914
+12   Philadelphia Phillies   1915
+13         Brooklyn Robins   1916
+14         New York Giants   1917
+15            Chicago Cubs   1918
+16       Chicago White Sox   1919
+17         Brooklyn Robins   1920
+18        New York Yankees   1921
+19        New York Yankees   1922
+20         New York Giants   1923
+21         New York Giants   1924
+
+79       Milwaukee Brewers   1982
+88          Atlanta Braves   1991
+89          Atlanta Braves   1992
+90   Philadelphia Phillies   1993
+91       Cleveland Indians   1995
+92          Atlanta Braves   1996
+93       Cleveland Indians   1997
+94        San Diego Padres   1998
+95          Atlanta Braves   1999
+96           New York Mets   2000
+97        New York Yankees   2001
+98    San Francisco Giants   2002
+99        New York Yankees   2003
+100    St. Louis Cardinals   2004
+101         Houston Astros   2005
+102         Detroit Tigers   2006
+103       Colorado Rockies   2007
+104         Tampa Bay Rays   2008
+105  Philadelphia Phillies   2009
+106          Texas Rangers   2010
+107          Texas Rangers   2011
+
+QUESTION 5: What is the relationship between the number of games won and winning the world series. To look at the correlation between the two, I looked at whether winning a divison title, meaning they had the most wins out of the teams in their division affected their outcome in the world series. From the data, we can see that it is unusual for a non-division winner to win the World Series.  
+> relations = dbGetQuery(con, "SELECT yearID, teamID FROM Teams WHERE DivWin = 'Y' AND WSWin = 'N';")
+> relations
+    yearID teamID
+1     1969    BAL
+2     1969    MIN
+3     1969    ATL
+4     1970    MIN
+5     1970    CIN
+6     1970    PIT
+7     1971    BAL
+8     1971    OAK
+9     1971    SFN
+10    1972    DET
+11    1972    CIN
+12    1972    PIT
+13    1973    BAL
+14    1973    CIN
+15    1973    NYN
+16    1974    BAL
+17    1974    LAN
+18    1974    PIT
+19    1975    BOS
+20    1975    OAK
+
+
+
+
+149   2008    CHA
+150   2008    LAA
+151   2008    TBA
+152   2008    CHN
+153   2008    LAN
+154   2009    LAA
+155   2009    MIN
+156   2009    LAN
+157   2009    PHI
+158   2009    SLN
+159   2010    MIN
+160   2010    TBA
+161   2010    TEX
+162   2010    CIN
+163   2010    PHI
+164   2011    DET
+165   2011    NYA
+166   2011    TEX
+167   2011    ARI
+168   2011    MIL
+169   2011    PHI
+
+QUESTION 6: What are the top 3 salaries of 2003? To look at the top three players with the highest salaries we implement:
+> salary = dbGetQuery(con, "Select * FROM Salaries WHERE yearID ==2003")
+
+We can see that the top three salaries are 22 million, 20 million and 18 million and 700 thousand.  
+QUESTION 7: What is the payroll of each team and plot
+> dbGetQuery(con, "SELECT sum(salary) FROM Salaries GROUP BY teamID")
+ 
+    yearID teamID sum(salary)
+1     1959    DET        7000
+2     1980    TOR       55000
+3     1981    NYA      588000
+4     1981    TOR       85000
+5     1982    TOR      250000
+6     1983    TOR      450000
+7     1984    TOR      650000
+8     1985    ATL    14807000
+9     1985    BAL    11560712
+10    1985    BOS    10897560
+11    1985    CAL    14427894
+12    1985    CHA     9846178
+
+739   2010    SEA    86510000
+740   2010    SFN    98641333
+741   2010    SLN    93540751
+742   2010    TBA    71923471
+743   2010    TEX    55250544
+744   2010    TOR    62234000
+745   2010    WAS    61400000
+
+Question 8: Have salaries kept up with inflation? To do this question, I downloaded a txt file from online:  
+ftp://ftp.bls.gov/pub/special.requests/cpi/cpiai.txt
+
+and loaded it into R. Next I looked at the average salary of a baseball player:
+> avgsal = dbGetQuery(con, "SELECT avg(salary) FROM Salaries")
+> avgsal
+  avg(salary)
+1     1673224
+
+dbGetQuery(con, "SELECT yearID, avg(salary) FROM Salaries")
+I would then proceed to look at the average salaries of many other years and compare that to the rate of inflation. Looking at the CPI and the rate of change for the average salary, I would say that the players’ salaries have increased at a higher rate than inflation. Therefore, it is true to say that becoming a baseball player comes with much better benefits that before.
+Question 9: Compare payroll for teams in same leagues and then divisions. Connection with performace?  We begin doing this question by looking at the different leagues each team belongs to and separate the teams into the two leagues. Afterwards, we compare the salaries of the two leagues: dbGetQuery(con, "SELECT lgID, salary FROM Salaries "). Looking at the table, we can see the differences of salaries between the two leagues. It is interesting to note that the bigger the city, the higher the payroll. We also notice that certain teams have a trend of having high payrolls: dbGetQuery(con, "SELECT teamID, salary FROM Salaries "). This may be due to the fact some cities are major and have a large population of civilians and fans such as New York, LA, SF, etc. There is indeed a ratio between payroll and performance with higher payroll teams having higher batting averages: dbGetQuery(con, “SELECT RBI, teamID FROM Batting”).
+Question 10: Has distribution of home runs increased? To approach this question we look at the number of home runs completed in each year and see if there is a trend from the data. Based off of the data produced from: dbGetQuery(con, "SELECT HR, yearID FROM Batting") and through this we can see that home runs have been increasing throughout each year possibly through improvements in training as well as medical breakthroughs such as steriods. 
+
